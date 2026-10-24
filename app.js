@@ -6,8 +6,8 @@
 
   var TXT = {
     lv: {
-      title: 'SIA Lui Beton · Māju būvniecība un tehnikas noma Augšdaugavā',
-      desc: 'SIA Lui Beton, Demene, Augšdaugavas novads: privātmāju būvniecība atslēgas galā, angāri, pamatu veidņu un fasādes sastatņu noma, traktora-ekskavatora Terex TLB990 noma.',
+      title: 'Lui Beton · Būvējam un iznomājam · Demene, Augšdaugavas novads',
+      desc: 'SIA Lui Beton, Demene, Augšdaugavas novads: privātmājas no pamatiem līdz atslēgām, angāri, traktora-ekskavatora Terex TLB990, pamatu veidņu un fasādes sastatņu noma. Cenu pateiksim pa tālruni.',
       subject: 'Pieprasījums no mājaslapas',
       subjectSvc: 'Pieprasījums: ',
       eService: 'Izvēlieties pakalpojumu.',
@@ -19,8 +19,8 @@
       hello: 'Labdien!'
     },
     ru: {
-      title: 'SIA Lui Beton · Строительство домов и аренда техники в Аугшдаугавском крае',
-      desc: 'SIA Lui Beton, Демене, Аугшдаугавский край: частные дома под ключ, ангары, аренда опалубки для фундаментов, фасадных лесов и трактора-экскаватора Terex TLB990.',
+      title: 'Lui Beton · Строим и сдаём в аренду · Демене, Аугшдаугавский край',
+      desc: 'SIA Lui Beton, Демене, Аугшдаугавский край: частные дома от фундамента до ключей, ангары, аренда трактора-экскаватора Terex TLB990, опалубки для фундамента и фасадных лесов. Цену скажем по телефону.',
       subject: 'Запрос с сайта',
       subjectSvc: 'Запрос: ',
       eService: 'Выберите услугу.',
@@ -36,7 +36,14 @@
   function $(s, c) { return (c || document).querySelector(s); }
   function $$(s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); }
 
-  function store(k, v) { try { if (v === undefined) { return window.localStorage.getItem(k); } window.localStorage.setItem(k, v); } catch (e) {} return null; }
+  var form = $('#form');
+  var sel = $('#f-service'), place = $('#f-place'), dates = $('#f-dates'), phone = $('#f-phone'), msg = $('#f-msg');
+  var errs = { service: $('#e-service'), place: $('#e-place'), phone: $('#e-phone'), sum: $('#e-sum') };
+
+  function clearErrors() {
+    Object.keys(errs).forEach(function (k) { if (errs[k]) { errs[k].hidden = true; errs[k].textContent = ''; } });
+    [sel, place, phone].forEach(function (i) { if (i) { i.removeAttribute('aria-invalid'); } });
+  }
 
   function setLang(l, persist) {
     if (l !== 'lv' && l !== 'ru') { l = 'lv'; }
@@ -69,31 +76,14 @@
     b.addEventListener('click', function () { setLang(b.getAttribute('data-set-lang'), true); });
   });
 
-  // mobile menu
-  var burger = $('#burger'), nav = $('#nav');
-  function closeNav() { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); }
-  burger.addEventListener('click', function () {
-    var open = nav.classList.toggle('is-open');
-    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  $$('a', nav).forEach(function (a) { a.addEventListener('click', closeNav); });
-
-  // buttons that preselect a service in the form
-  var form = $('#form');
-  var sel = $('#f-service'), place = $('#f-place'), dates = $('#f-dates'), phone = $('#f-phone'), msg = $('#f-msg');
+  // links that preselect a service in the form
   $$('[data-service]').forEach(function (a) {
     a.addEventListener('click', function () { sel.value = a.getAttribute('data-service'); clearErrors(); });
   });
 
-  var errs = { service: $('#e-service'), place: $('#e-place'), phone: $('#e-phone'), sum: $('#e-sum') };
-
   function showErr(key, input, text) {
     errs[key].textContent = text; errs[key].hidden = false;
     if (input) { input.setAttribute('aria-invalid', 'true'); }
-  }
-  function clearErrors() {
-    Object.keys(errs).forEach(function (k) { if (errs[k]) { errs[k].hidden = true; errs[k].textContent = ''; } });
-    [sel, place, phone].forEach(function (i) { if (i) { i.removeAttribute('aria-invalid'); } });
   }
 
   function validate() {
@@ -110,16 +100,13 @@
 
   function buildMailto() {
     var T = TXT[lang];
-    var svcOpt = sel.options[sel.selectedIndex];
-    var svcName = svcOpt ? svcOpt.textContent : '';
-    var lines = [T.hello, '',
-      T.lService + ': ' + svcName,
-      T.lPlace + ': ' + place.value.trim()];
+    var opt = sel.options[sel.selectedIndex];
+    var svc = opt ? opt.textContent : '';
+    var lines = [T.hello, '', T.lService + ': ' + svc, T.lPlace + ': ' + place.value.trim()];
     if (dates.value.trim()) { lines.push(T.lDates + ': ' + dates.value.trim()); }
     lines.push(T.lPhone + ': ' + phone.value.trim());
     if (msg.value.trim()) { lines.push('', T.lMsg + ':', msg.value.trim()); }
-    var body = lines.join('\r\n');
-    return 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(T.subjectSvc + svcName) + '&body=' + encodeURIComponent(body);
+    return 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(T.subjectSvc + svc) + '&body=' + encodeURIComponent(lines.join('\r\n'));
   }
 
   [sel, place, phone].forEach(function (i) {
